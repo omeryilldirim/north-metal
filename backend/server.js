@@ -41,6 +41,8 @@ transporter.verify(function(error, success) {
     console.log("MAIL SERVER READY");
   }
 });
+console.log("MAIL USER:", process.env.EMAIL_USER);
+console.log("MAIL PASS EXISTS:", !!process.env.EMAIL_PASS);
 
 
 
