@@ -182,7 +182,7 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
   }
 
   try {
-    await resend.emails.send({
+    const result = await resend.emails.send({
       from: "North Metal <onboarding@resend.dev>",
       to: process.env.EMAIL_USER,
       subject: `${customer} - Yeni Sipariş`,
@@ -191,9 +191,11 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
         {
           filename: zipFile.originalname,
           content: zipFile.buffer.toString("base64"),
+          contentType: "application/zip",
         },
       ],
     });
+    console.log("RESEND RESULT:", result);
     res.json({ success: true });
   } catch (err) {
     console.error(err);
