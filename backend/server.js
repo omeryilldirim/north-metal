@@ -103,7 +103,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
   // 🔹 buffer → dosya
   fs.writeFileSync(tempPath, req.file.buffer);
 
-  const python = spawn("python3", ["analyze_file.py", tempPath]);
+  const python = spawn("python", ["analyze_file.py", tempPath]);
   let output = "";
   let errorOutput = "";
   python.stdout.on("data", (data) => {
