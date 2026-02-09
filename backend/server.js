@@ -184,7 +184,7 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
   try {
     const result = await resend.emails.send({
       from: "North Metal <onboarding@resend.dev>",
-      to: process.env.EMAIL_USER,
+      to: "omeryilldirim@outlook.com",
       subject: `${customer} - Yeni Sipariş`,
       text: `${customer} yeni sipariş dosyasi ektedir.`,
       attachments: [
