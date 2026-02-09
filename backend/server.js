@@ -5,8 +5,12 @@ const cors = require("cors");
 const multer = require("multer");
 const { spawn } = require("child_process");
 const path = require("path");
-const nodemailer = require("nodemailer");
+// const nodemailer = require("nodemailer");
 const fs = require("fs");
+const { Resend } = require("resend");
+
+const resend = new Resend(process.env.RESEND_API_KEY);
+
 
 
 const app = express();
@@ -24,22 +28,22 @@ app.use(express.json());
 const upload = multer({ storage: multer.memoryStorage() });
 
 //? Nodemailer setup (Gmail örnek)
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  auth: {
-    user: process.env.EMAIL_USER,         // Gönderici mail
-    pass: process.env.EMAIL_PASS,         // Gmail App Password
-  },
-});
-transporter.verify(function(error, success) {
-  if (error) {
-    console.log("MAIL ERROR:", error);
-  } else {
-    console.log("MAIL SERVER READY");
-  }
-});
+// const transporter = nodemailer.createTransport({
+//   host: "smtp.gmail.com",
+//   port: 587,
+//   secure: false,
+//   auth: {
+//     user: process.env.EMAIL_USER,         // Gönderici mail
+//     pass: process.env.EMAIL_PASS,         // Gmail App Password
+//   },
+// });
+// transporter.verify(function(error, success) {
+//   if (error) {
+//     console.log("MAIL ERROR:", error);
+//   } else {
+//     console.log("MAIL SERVER READY");
+//   }
+// });
 console.log("MAIL USER:", process.env.EMAIL_USER);
 console.log("MAIL PASS EXISTS:", !!process.env.EMAIL_PASS);
 
@@ -178,20 +182,18 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
   }
 
   try {
-    const mailOptions = {
-      from: `${customer} <${process.env.EMAIL_USER}>`,
+    await resend.emails.send({
+      from: "North Metal <onboarding@resend.dev>",
       to: process.env.EMAIL_USER,
       subject: `${customer} - Yeni Sipariş`,
       text: `${customer} yeni sipariş dosyasi ektedir.`,
       attachments: [
         {
           filename: zipFile.originalname,
-          content: zipFile.buffer,
+          content: zipFile.buffer.toString("base64"),
         },
       ],
-    };
-
-    await transporter.sendMail(mailOptions);
+    });
     res.json({ success: true });
   } catch (err) {
     console.error(err);
