@@ -1,15 +1,23 @@
 FROM node:20
 
-RUN apt-get update && apt-get install -y python3 python3-pip
+RUN apt-get update && apt-get install -y python3 python3-pip python3-venv
 
 WORKDIR /app
 
-# önce dependency kopyala (cache için)
 COPY package*.json ./
 COPY requirements.txt ./
 
+# node install
 RUN npm install
-RUN pip3 install -r requirements.txt
+
+# python venv oluştur
+RUN python3 -m venv /opt/venv
+
+# venv aktif et
+ENV PATH="/opt/venv/bin:$PATH"
+
+# python paketleri
+RUN pip install -r requirements.txt
 
 # sonra tüm kod
 COPY . .
