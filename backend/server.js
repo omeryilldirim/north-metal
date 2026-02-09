@@ -187,6 +187,9 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
   }
 });
 
+app.get("/", (req,res)=>{
+ res.send("API OK");
+});
 
 const PORT = process.env.PORT || 3001;
 

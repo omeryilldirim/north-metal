@@ -60,7 +60,7 @@ function App() {
   };
 
   async function fetchPrice(width, height, partCount = 1) {
-    const res = await fetch("http://localhost:3001/calculate-price", {
+    const res = await fetch("https://north-metal.up.railway.app/calculate-price", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -112,7 +112,7 @@ function App() {
       formData.append("zip", zipBlob, `${customer}_${dateTimeText}.zip`);
       formData.append("customer", customer);
 
-      const res = await fetch("http://localhost:3001/submit-order", {
+      const res = await fetch("https://north-metal.up.railway.app/submit-order", {
         method: "POST",
         body: formData,
       });
@@ -166,7 +166,7 @@ function App() {
     try {
       const formData = new FormData();
       formData.append("file", file);
-      const res = await fetch("http://localhost:3001/upload", {
+      const res = await fetch("https://north-metal.up.railway.app/upload", {
         method: "POST",
         body: formData,
       });
