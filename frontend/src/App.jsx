@@ -59,7 +59,7 @@ function App() {
     });
   };
 
-  async function fetchPrice(width, height, partCount = 1) {
+  async function fetchPrice(width, height, partCount = 1, partsList = null) {
     const res = await fetch("https://north-metal.up.railway.app/calculate-price", {
       method: "POST",
       headers: {
@@ -69,6 +69,7 @@ function App() {
         width,
         height,
         partCount,
+        partsList
       }),
     });
 
@@ -576,8 +577,10 @@ function App() {
 
     if (selected.length < 2) return;
 
+    const partsList = selected.map(o => ({ width: o.width, height: o.height }));
+console.log(partsList);
     const mergedPreview = await generateMergedPreview(selected)
-    const mergedPrice = await fetchPrice( Math.round(mergedPreview.width), Math.round(mergedPreview.height), selected.length );
+    const mergedPrice = await fetchPrice( Math.round(mergedPreview.width), Math.round(mergedPreview.height), selected.length, partsList );
 
     const merged = {
       id: crypto.randomUUID(),

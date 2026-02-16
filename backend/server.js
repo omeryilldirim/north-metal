@@ -44,28 +44,49 @@ const upload = multer({ storage: multer.memoryStorage() });
 //     console.log("MAIL SERVER READY");
 //   }
 // });
-console.log("MAIL USER:", process.env.EMAIL_USER);
-console.log("MAIL PASS EXISTS:", !!process.env.EMAIL_PASS);
-
 
 
 //? Fiyat hesaplama fonksiyonu
-function calculatePrice(width, height, partCount = 1) {
+function calculatePrice(width, height, partCount = 1, partsList = null) {
   let price = ((((width * height * 1.5 * 8) / 1_000_000) * 35 * 2.5 + 200) * 1.8 * 0.9166);
-
-  // 🔹 // %10 zam : 35 cm kontrolü (350 mm) 
-  if (width > 350 || height > 350) {
+  console.log("🔥 NEW FORMULA ACTIVE"); 
+  console.log("data",width, height, partCount, partsList);
+  // =====================================================
+  // ✅ %10 zam (35cm kontrolü)
+  // =====================================================
+  if (width > 359 || height > 359) {
     price *= 1.10;
   }
 
-  // 🔹 Uzun kenar kontrolü (990 mm üstü)
-  if (width > 990 || height > 990) {
-    price += 200;
-  }
+  // =====================================================
+  // ✅ UZUN KENAR KONTROLÜ (YENİ SİSTEM)
+  // =====================================================
+  const longestSide = Math.max(width, height);
 
-  // 🔹 Merge ekstra parça ücreti
-  if (partCount > 1) {
-    price += (partCount - 1) * 25;
+  if (longestSide > 690 && longestSide < 995) {
+    price += 100;
+  } else if (longestSide >= 995 && longestSide < 1195) {
+    price += 200;
+  } else if (longestSide >= 1195 && longestSide < 1395) {
+    price += 300;
+  } else if (longestSide >= 1395 && longestSide < 1495) {
+    price += 400;
+  } else if (longestSide >= 1495) {
+    price += 500;
+  }
+  console.log("array", Array.isArray(partsList) );
+  // =====================================================
+  // ✅ MERGE EXTRA PARÇA ÜCRETİ
+  // =====================================================
+  if (partCount > 1 && Array.isArray(partsList)) {
+    partsList.forEach(part => {
+      const longest = Math.max(part.width, part.height);
+      if (longest >= 101 && longest < 250) {
+        price += 15;
+      } else if (longest >= 250) {
+        price += 25;
+      }
+    });
   }
   return price;
 }
@@ -156,7 +177,7 @@ app.post("/upload", upload.single("file"), (req, res) => {
 
 //? Calculate price endpoint
 app.post("/calculate-price", (req, res) => {
-  const { width, height, partCount } = req.body;
+  const { width, height, partCount, partsList } = req.body;
 
   if (!width || !height) {
     return res.status(400).json({
@@ -167,7 +188,8 @@ app.post("/calculate-price", (req, res) => {
   const price = calculatePrice(
     Number(width),
     Number(height),
-    Number(partCount || 1)
+    Number(partCount || 1),
+    partsList
   );
   res.json({ price });
 });
