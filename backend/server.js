@@ -49,8 +49,8 @@ const upload = multer({ storage: multer.memoryStorage() });
 //? Fiyat hesaplama fonksiyonu
 function calculatePrice(width, height, partCount = 1, partsList = null) {
   let price = ((((width * height * 1.5 * 8) / 1_000_000) * 35 * 2.5 + 200) * 1.8 * 0.9166);
-  console.log("🔥 NEW FORMULA ACTIVE"); 
-  console.log("data",width, height, partCount, partsList);
+
+  console.log("partsList", partsList);
   // =====================================================
   // ✅ %10 zam (35cm kontrolü)
   // =====================================================
@@ -74,18 +74,30 @@ function calculatePrice(width, height, partCount = 1, partsList = null) {
   } else if (longestSide >= 1495) {
     price += 500;
   }
-  console.log("array", Array.isArray(partsList) );
+
   // =====================================================
-  // ✅ MERGE EXTRA PARÇA ÜCRETİ
+  // ✅ MERGE EXTRA PARÇA ÜCRETİ (EN BÜYÜK ALAN HARİÇ)
   // =====================================================
-  if (partCount > 1 && Array.isArray(partsList)) {
-    partsList.forEach(part => {
+  if (partCount > 1 && Array.isArray(partsList) && partsList.length) {
+
+    // en büyük parçanın indexini bul
+    const biggestIndex = partsList
+      .map(p => p.width * p.height)
+      .indexOf(Math.max(...partsList.map(p => p.width * p.height)));
+
+    partsList.forEach((part, i) => {
+
+      // sadece en büyük parçayı atla
+      if (i === biggestIndex) return;
+
       const longest = Math.max(part.width, part.height);
+
       if (longest >= 101 && longest < 250) {
         price += 15;
       } else if (longest >= 250) {
         price += 25;
       }
+
     });
   }
   return price;
