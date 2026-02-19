@@ -18,21 +18,22 @@ function App() {
   const [selectedIds, setSelectedIds] = useState([]);
   const COLORS = [
     { name: "Siyah", hex: "#000000" },
-    { name: "Eskitme", hex: "#7a6a58" },
-    { name: "Sari", hex: "#f4c430" },
+    { name: "Eskitme", hex: "##bfa24a" },
+    { name: "Sarı", hex: "#f4c430" },
+    { name: "Kırmızı", hex: "#ff0000" },
     { name: "Simli Mavi", hex: "#3f6fa0" },
     { name: "Simli Kahve", hex: "#6b4f3f" },
     { name: "Krem", hex: "#f5f0dc" },
     { name: "Turuncu", hex: "#ff7a00" },
-    { name: "Bakir", hex: "#b87333" },
-    { name: "Antrasit", hex: "#2f343a" },
+    { name: "Bakır", hex: "#a44413" },
+    // { name: "Antrasit", hex: "#2f343a" },
     { name: "Gri", hex: "#808080" },
     { name: "Beyaz", hex: "#ffffff" },
     { name: "Gold Patina", hex: "#bfa24a" },
-    { name: "Gümüs Patina", hex: "#bfc3c7" },
-    { name: "Bakir Patina", hex: "#7c4a2d" },
-    { name: "Catlak Siyah", hex: "#1c1c1c" },
-    { name: "Catlak Krem", hex: "#e6dcc8" },
+    { name: "Gümüş Patina", hex: "#bfc3c7" },
+    { name: "Bakır Patina", hex: "#a44413" },
+    { name: "Çatlak Siyah", hex: "#1c1c1c" },
+    { name: "Çatlak Krem", hex: "#e6dcc8" },
   ];
 
   const toggleSelect = (id) => {
@@ -56,7 +57,7 @@ function App() {
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit",
-    });
+    }).replace(/:/g, "."); // tüm : karakterlerini . ile değiştir
   };
 
   async function fetchPrice(width, height, partCount = 1, partsList = null) {
@@ -389,7 +390,7 @@ function App() {
         { align: "right" }
       );
 
-      doc.save("siparis.pdf");
+      doc.save(`${customer}-siparis-${dateTimeText}.pdf`);
       showToast("success", "PDF başarıyla indirildi ✅");
     } catch (err) {
       showToast("error", "PDF indirilemedi ❌");
@@ -578,7 +579,6 @@ function App() {
     if (selected.length < 2) return;
 
     const partsList = selected.map(o => ({ width: o.width, height: o.height }));
-console.log(partsList);
     const mergedPreview = await generateMergedPreview(selected)
     const mergedPrice = await fetchPrice( Math.round(mergedPreview.width), Math.round(mergedPreview.height), selected.length, partsList );
 
