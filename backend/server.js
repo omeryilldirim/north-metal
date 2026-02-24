@@ -92,9 +92,11 @@ function calculatePrice(width, height, partCount = 1, partsList = null) {
 
       const longest = Math.max(part.width, part.height);
 
-      if (longest >= 101 && longest < 250) {
+      if (longest <= 100) {
+        price += 10;
+      } else if (longest < 250) {
         price += 15;
-      } else if (longest >= 250) {
+      } else {
         price += 25;
       }
 

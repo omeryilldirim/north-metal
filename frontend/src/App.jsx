@@ -730,14 +730,13 @@ function App() {
                           height: 18,
                           borderRadius: 4,
                           backgroundColor:
-                            COLORS.find((c) => c.name === o.color)?.hex ||
-                            "transparent",
+                            COLORS.find((c) => c.name === o.color)?.hex || "#000000",
                           border: "1px solid #999",
                         }}
                       />
                       {/* Select */}
                       <select
-                        value={o.color}
+                        value={o.color || "Siyah"}
                         onChange={(e) => updateColor(i, e.target.value)}
                         style={{
                           padding: "4px 6px",
