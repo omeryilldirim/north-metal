@@ -18,7 +18,7 @@ function App() {
   const [selectedIds, setSelectedIds] = useState([]);
   const COLORS = [
     { name: "Siyah", hex: "#000000" },
-    { name: "Eskitme", hex: "##bfa24a" },
+    { name: "Eskitme", hex: "#bfa24a" },
     { name: "Sarı", hex: "#f4c430" },
     { name: "Kırmızı", hex: "#ff0000" },
     { name: "Simli Mavi", hex: "#3f6fa0" },
@@ -196,7 +196,7 @@ function App() {
           width,
           height,
           price,
-          color: "",
+          color: COLORS[0].name,
           name: "",
           description: "",
           preview: obj.preview,
@@ -673,7 +673,7 @@ function App() {
       <br />
 
       {/* ANALYZE BUTONU */}
-      <button onClick={analyzeFile} disabled={!file || !customer || analyzing}>
+      <button className="primary-button" onClick={analyzeFile} disabled={!file || !customer || analyzing}>
         {/* {analyzing ? "Analiz ediliyor..." : "Analiz Et"} */}
         {analyzing ? <span className="spinner" /> : "Analiz Et"}
       </button>
@@ -790,22 +790,28 @@ function App() {
 
           {/* PDF BUTONU */}
           <button
+            className="primary-button"
             disabled={!allFieldsFilled || !customer || pdfLoading}
             onClick={generatePDF}
           >
             {pdfLoading ? "PDF hazırlanıyor..." : "Kaydet ve PDF İndir"}
           </button>
-          {/* Birleştirme Butonu */}
-          <button disabled={selectedIds.length < 2} onClick={mergeSelected}>
-            Seçilenleri Tek Ürün Yap
-          </button>
-          <button onClick={submitFile} disabled={isSubmitting || !file || !customer}>
+          <button className="primary-button" onClick={submitFile} disabled={isSubmitting || !file || !customer}>
             {isSubmitting ? <span className="spinner" /> : "Üretime Gönder"}
           </button>
           {toast && (
             <div className={`toast toast-${toast.type}`}>{toast.message}</div>
           )}
         </>
+      )}
+      {selectedIds.length > 0 && (
+        <button
+          className="merge-floating-btn"
+          disabled={selectedIds.length < 2}
+          onClick={mergeSelected}
+        >
+          {`Seçilenleri Birleştir (${selectedIds.length})`}
+        </button>
       )}
     </div>
   );

@@ -113,7 +113,7 @@ input[type="text"]:focus {
 }
 
 /* Butonlar */
-button {
+.primary-button {
   padding: 12px 20px;
   border-radius: 10px;
   border: none;
@@ -127,12 +127,12 @@ button {
   margin: 4px auto;
 }
 
-button:hover:not(:disabled) {
+.primary-button:hover:not(:disabled) {
   transform: translateY(-1px);
   box-shadow: 0 6px 16px rgba(63, 111, 160, 0.3);
 }
 
-button:disabled {
+.primary-button:disabled {
   background: #c7cfdb;
   cursor: not-allowed;
 }
@@ -290,4 +290,31 @@ tbody tr:hover {
 
 .info-box ol li {
   margin-bottom: 2px;
+}
+
+.merge-floating-btn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  padding: 14px 20px;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 30px;
+  border: none;
+  background: linear-gradient(135deg, #3f6fa0, #5f8fc4);
+  color: white;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.2);
+  cursor: pointer;
+  z-index: 1000;
+  transition: all 0.2s ease;
+}
+
+.merge-floating-btn:hover {
+  transform: translateY(-2px);
+}
+
+.merge-floating-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  box-shadow: none;
 }
