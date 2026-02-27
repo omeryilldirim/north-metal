@@ -2,7 +2,8 @@ import { useState, useRef } from "react";
 import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import JSZip from "jszip";
-import DejaVuBase64 from "./fonts/DejaVuSans.base64";
+// import DejaVuBase64 from "./fonts/DejaVuSans.base64";
+import NotoSansBase64 from "./fonts/NotoSans.base64";
 
 
 function App() {
@@ -293,9 +294,12 @@ function App() {
       }
 
       const doc = new jsPDF();
-      doc.addFileToVFS("DejaVuSans.ttf", DejaVuBase64);
-      doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
-      doc.setFont("DejaVu");
+      // doc.addFileToVFS("DejaVuSans.ttf", DejaVuBase64);
+      // doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
+      // doc.setFont("DejaVu");
+      doc.addFileToVFS("NotoSans-Regular.ttf", NotoSansBase64);
+      doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
+      doc.setFont("NotoSans");
       doc.setFontSize(12);
       doc.text(`Mağaza ismi: ${customer}`, 14, 15);
 
@@ -306,7 +310,7 @@ function App() {
           1: { minCellWidth:40, minCellHeight: 40}, // Önizleme sütunu
         },
         styles: {
-          font: "DejaVu",
+          font: "NotoSans",
           fontStyle: "normal",
           lineWidth: 0.3,              // 🔹 hücre çizgi kalınlığı
           lineColor: [180, 180, 180],  // 🔹 açık gri border
@@ -314,14 +318,14 @@ function App() {
           fontSize: 10,
         },
         headStyles: {
-          font: "DejaVu",
+          font: "NotoSans",
           fontStyle: "normal",
           minCellHeight: 8,     // 🔹 başlık normal yükseklik
           halign: "center",
           valign: "middle",
         },
         bodyStyles: {
-          font: "DejaVu",
+          font: "NotoSans",
           minCellHeight: 25,    // ✅ SADECE body satırları 25mm
           valign: "middle",
           halign: "center",
@@ -366,7 +370,7 @@ function App() {
         },
         didDrawPage: (data) => {
           const pageCount = doc.internal.getNumberOfPages();
-          doc.setFont("DejaVu");
+          doc.setFont("NotoSans");
           doc.setFontSize(10);
           doc.text(
             `Sayfa ${data.pageNumber} / ${pageCount}`,
@@ -420,9 +424,12 @@ function App() {
     }
 
     const doc = new jsPDF();
-    doc.addFileToVFS("DejaVuSans.ttf", DejaVuBase64);
-    doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
-    doc.setFont("DejaVu");
+    // doc.addFileToVFS("DejaVuSans.ttf", DejaVuBase64);
+    // doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
+    // doc.setFont("DejaVu");
+    doc.addFileToVFS("NotoSans-Regular.ttf", NotoSansBase64);
+    doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
+    doc.setFont("NotoSans");
     doc.setFontSize(12);
     doc.text(`Magaza ismi: ${customer}`, 14, 15);
 
@@ -444,7 +451,7 @@ function App() {
         1: { minCellWidth: 40, minCellHeight: 40 }, // Önizleme sütunu
       },
       styles: {
-        font: "DejaVu",
+        font: "NotoSans",
         fontStyle: "normal",
         lineWidth: 0.3, // 🔹 hücre çizgi kalınlığı
         lineColor: [180, 180, 180], // 🔹 açık gri border
@@ -452,14 +459,14 @@ function App() {
         fontSize: 10,
       },
       headStyles: {
-        font: "DejaVu",
+        font: "NotoSans",
         fontStyle: "normal",
         minCellHeight: 8, // 🔹 başlık normal yükseklik
         halign: "center",
         valign: "middle",
       },
       bodyStyles: {
-        font: "DejaVu",
+        font: "NotoSans",
         minCellHeight: 25, // ✅ SADECE body satırları 25mm
         valign: "middle",
         halign: "center",
@@ -503,6 +510,7 @@ function App() {
       },
       didDrawPage: (data) => {
         const pageCount = doc.internal.getNumberOfPages();
+        doc.setFont("NotoSans");
         doc.setFontSize(10);
         doc.text(
           `Sayfa ${data.pageNumber} / ${pageCount}`,
