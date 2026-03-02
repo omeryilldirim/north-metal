@@ -298,8 +298,8 @@ function App() {
       // doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
       // doc.setFont("DejaVu");
       doc.addFileToVFS("NotoSans-Regular.ttf", NotoSansBase64);
-      doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
-      doc.setFont("NotoSans");
+      doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal", "Identity-H");
+      doc.setFont("NotoSans", "normal");
       doc.setFontSize(12);
       doc.text(`Mağaza ismi: ${customer}`, 14, 15);
 
@@ -333,9 +333,9 @@ function App() {
         body: objects.map((o, i) => [
           i + 1,
           "",  // Önizleme hücresi boş bırakılıyor, resim didDrawCell ile ekleniyor
-          o.color || "",
-          o.description || "", 
-          o.name || "",
+          safeText(o.color),
+          safeText(o.description || ""),
+          safeText(o.name),
           Math.round(o.width),
           Math.round(o.height),
           o.price,
@@ -370,7 +370,7 @@ function App() {
         },
         didDrawPage: (data) => {
           const pageCount = doc.internal.getNumberOfPages();
-          doc.setFont("NotoSans");
+          doc.setFont("NotoSans", "normal");
           doc.setFontSize(10);
           doc.text(
             `Sayfa ${data.pageNumber} / ${pageCount}`,
@@ -428,8 +428,8 @@ function App() {
     // doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
     // doc.setFont("DejaVu");
     doc.addFileToVFS("NotoSans-Regular.ttf", NotoSansBase64);
-    doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal");
-    doc.setFont("NotoSans");
+    doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal", "Identity-H");
+    doc.setFont("NotoSans", "normal");
     doc.setFontSize(12);
     doc.text(`Magaza ismi: ${customer}`, 14, 15);
 
@@ -474,9 +474,9 @@ function App() {
       body: objects.map((o, i) => [
         i + 1,
         "",
-        o.color,
-        o.description || "",
-        o.name,
+        safeText(o.color),
+        safeText(o.description || ""),
+        safeText(o.name),
         o.width,
         o.height,
         o.price,
@@ -510,7 +510,7 @@ function App() {
       },
       didDrawPage: (data) => {
         const pageCount = doc.internal.getNumberOfPages();
-        doc.setFont("NotoSans");
+        doc.setFont("NotoSans", "normal");
         doc.setFontSize(10);
         doc.text(
           `Sayfa ${data.pageNumber} / ${pageCount}`,
@@ -608,6 +608,10 @@ function App() {
     setObjects([...rest, merged]);
     setSelectedIds([]);
   };
+
+  function safeText(text) {
+    return text ? text.normalize("NFC") : "";
+  }
 
   return (
     <div className="app-container">
