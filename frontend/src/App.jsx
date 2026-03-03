@@ -4,6 +4,7 @@ import autoTable from "jspdf-autotable";
 import JSZip from "jszip";
 // import DejaVuBase64 from "./fonts/DejaVuSans.base64";
 import NotoSansBase64 from "./fonts/NotoSans.base64";
+import { v4 as uuidv4 } from "uuid";
 
 
 function App() {
@@ -191,7 +192,7 @@ function App() {
         total += price;
 
         prepared.push({
-          id: `obj-${crypto.randomUUID()}`,
+          id: `obj-${uuidv4()}`,
           groupId: null,
           ...obj,
           width,
@@ -585,8 +586,8 @@ function App() {
     const mergedPrice = await fetchPrice( Math.round(mergedPreview.width), Math.round(mergedPreview.height), selected.length, partsList );
 
     const merged = {
-      id: crypto.randomUUID(),
-      groupId: crypto.randomUUID(),
+      id: uuidv4(),
+      groupId: uuidv4(),
       name: selected[0].name,
       color: selected[0].color,
 
