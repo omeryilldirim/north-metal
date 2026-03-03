@@ -294,9 +294,6 @@ function App() {
       }
 
       const doc = new jsPDF();
-      // doc.addFileToVFS("DejaVuSans.ttf", DejaVuBase64);
-      // doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
-      // doc.setFont("DejaVu");
       doc.addFileToVFS("NotoSans-Regular.ttf", NotoSansBase64);
       doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal", "Identity-H");
       doc.setFont("NotoSans", "normal");
@@ -424,9 +421,6 @@ function App() {
     }
 
     const doc = new jsPDF();
-    // doc.addFileToVFS("DejaVuSans.ttf", DejaVuBase64);
-    // doc.addFont("DejaVuSans.ttf", "DejaVu", "normal");
-    // doc.setFont("DejaVu");
     doc.addFileToVFS("NotoSans-Regular.ttf", NotoSansBase64);
     doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal", "Identity-H");
     doc.setFont("NotoSans", "normal");

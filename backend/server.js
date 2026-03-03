@@ -8,11 +8,7 @@ const path = require("path");
 // const nodemailer = require("nodemailer");
 const fs = require("fs");
 const { Resend } = require("resend");
-
 const resend = new Resend(process.env.RESEND_API_KEY);
-
-
-
 const app = express();
 app.use(cors());
 app.use(express.json());
@@ -45,24 +41,20 @@ const upload = multer({ storage: multer.memoryStorage() });
 //   }
 // });
 
-
 //? Fiyat hesaplama fonksiyonu
 function calculatePrice(width, height, partCount = 1, partsList = null) {
   let price = ((((width * height * 1.5 * 8) / 1_000_000) * 35 * 2.5 + 200) * 1.8 * 0.9166);
-
-  console.log("partsList", partsList);
+  console.log(`${partCount} parça fiyatı hesaplandı`, partsList);
   // =====================================================
   // ✅ %10 zam (35cm kontrolü)
   // =====================================================
   if (width > 359 || height > 359) {
     price *= 1.10;
   }
-
   // =====================================================
   // ✅ UZUN KENAR KONTROLÜ (YENİ SİSTEM)
   // =====================================================
   const longestSide = Math.max(width, height);
-
   if (longestSide > 690 && longestSide < 995) {
     price += 100;
   } else if (longestSide >= 995 && longestSide < 1195) {
@@ -74,24 +66,19 @@ function calculatePrice(width, height, partCount = 1, partsList = null) {
   } else if (longestSide >= 1495) {
     price += 500;
   }
-
   // =====================================================
   // ✅ MERGE EXTRA PARÇA ÜCRETİ (EN BÜYÜK ALAN HARİÇ)
   // =====================================================
   if (partCount > 1 && Array.isArray(partsList) && partsList.length) {
-
     // en büyük parçanın indexini bul
     const biggestIndex = partsList
       .map(p => p.width * p.height)
       .indexOf(Math.max(...partsList.map(p => p.width * p.height)));
 
     partsList.forEach((part, i) => {
-
       // sadece en büyük parçayı atla
       if (i === biggestIndex) return;
-
       const longest = Math.max(part.width, part.height);
-
       if (longest <= 100) {
         price += 10;
       } else if (longest < 250) {
@@ -99,7 +86,6 @@ function calculatePrice(width, height, partCount = 1, partsList = null) {
       } else {
         price += 25;
       }
-
     });
   }
   return price;
@@ -158,10 +144,12 @@ app.post("/upload", upload.single("file"), (req, res) => {
   let output = "";
   let errorOutput = "";
   python.stdout.on("data", (data) => {
-    output += data.toString();
+    const text = data.toString();
+    output += text;
   });
   python.stderr.on("data", (data) => {
-    errorOutput += data.toString();
+    const text = data.toString();
+    errorOutput += text;
   });
   python.on("close", (code) => {
     console.log("PYTHON EXIT CODE:", code);
@@ -172,14 +160,12 @@ app.post("/upload", upload.single("file"), (req, res) => {
       const parsed = JSON.parse(output);
       res.json(parsed);
     } catch (err) {
-      // ! yeni eklendi
       console.error("❌ JSON PARSE FAILED");
       console.error("PYTHON EXIT CODE:", code);
       console.error("RAW OUTPUT:");
       console.error(output);
       console.error("STDERR:");
       console.error(errorOutput);
-      //  !
       res.status(500).json({
         error: "Python JSON parse failed",
         rawOutput: output,
@@ -219,7 +205,7 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
 
   try {
     const result = await resend.emails.send({
-      from: "North Metal <onboarding@resend.dev>",
+      from: "North Metal <info@northlasercut.com>",
       to: process.env.EMAIL_USER,
       subject: `${customer} - Yeni Sipariş`,
       text: `${customer} yeni sipariş dosyasi ektedir.`,
@@ -232,6 +218,7 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
       ],
     });
     console.log("RESEND RESULT:", result);
+    console.log(`${customer} - Sipariş maili gönderildi.`);
     res.json({ success: true });
   } catch (err) {
     console.error(err);

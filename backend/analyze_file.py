@@ -6,6 +6,7 @@ from xml.etree import ElementTree as ET
 import ezdxf
 from svgpathtools import svg2paths2, parse_path, Path
 from svgpathtools.parser import parse_transform
+import sys
 
 
 def svg_path_preview_dxf(obj, scale=1):
@@ -80,24 +81,17 @@ def analyze_svg(file_path):
         if val.endswith("mm"):
             return float(val.replace("mm", ""))
         if val.endswith("px"):
-            return float(val.replace("px", "")) * 0.264583  # px → mm
+            return float(val.replace("px", "")) * (25.4 / 72.0)  # 1 px ≈ 0.3527 mm (illustrator standard)
         return float(val)  # çıplak sayı → mm varsay
 
     svg_w_mm = parse_size(svg_attr.get("width"))
     svg_h_mm = parse_size(svg_attr.get("height"))
-
+    
     if "viewBox" not in svg_attr:
         raise ValueError("SVG viewBox yok, ölçü hesaplanamaz")
 
     vb_minx, vb_miny, vb_w, vb_h = map(float, svg_attr["viewBox"].split())
 
-    # ! eskisi silindi
-    # --- SCALE (viewBox → mm) ---
-    # scale_x = svg_w_mm / vb_w if svg_w_mm else 1
-    # scale_y = svg_h_mm / vb_h if svg_h_mm else 1
-    # !
-
-    # !yeni eklendi
     # --- SCALE (viewBox → mm) ---
     if svg_w_mm and svg_h_mm:
         # Illustrator / düzgün SVG
@@ -108,7 +102,6 @@ def analyze_svg(file_path):
         PX_TO_MM = 25.4 / 72.0  # 1 px ≈ 0.3527 mm (SVG standard)
         scale_x = PX_TO_MM
         scale_y = PX_TO_MM
-    # !
 
     # --- PATH BBOX'LARI ---
     for path in paths:
@@ -120,7 +113,6 @@ def analyze_svg(file_path):
         maxy = ymax * scale_y
         width = maxx - minx
         height = maxy - miny
-
 
         # 🔹 TABLO PREVIEW (SADECE BBOX)
         preview_bbox = svg_path_preview(
@@ -196,8 +188,6 @@ def analyze_file(file_path):
     else:
         raise ValueError("Unsupported file type")
 
-    # outer_objects = filter_outer_objects(objects)
-    # return outer_objects
     return objects
 
 def svg_path_preview(path, bbox, scale, flip_y=False):
@@ -333,10 +323,9 @@ def analyze_ai_as_svg(file_path):
 
 
 if __name__ == "__main__":
-    import sys
-    import json
-
     file_path = sys.argv[1]
     result = analyze_file(file_path)
 
-    print(json.dumps(result))
+    # SADECE JSON yaz
+    sys.stdout.write(json.dumps(result))
+    sys.stdout.flush()
