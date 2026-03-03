@@ -5,6 +5,7 @@ import JSZip from "jszip";
 // import DejaVuBase64 from "./fonts/DejaVuSans.base64";
 import NotoSansBase64 from "./fonts/NotoSans.base64";
 import { v4 as uuidv4 } from "uuid";
+import customerList from "./customers";
 
 
 function App() {
@@ -104,6 +105,7 @@ function App() {
       if (!pdfBlob) return;
 
       const dateTimeText = getFormattedDateTime();
+      const customerEmail = customerList.find(c => c.name === customer)?.email || "northmetalco@gmail.com";
 
       const zip = new JSZip();
       zip.file(file.name, file); // AI veya SVG
@@ -115,6 +117,8 @@ function App() {
       const formData = new FormData();
       formData.append("zip", zipBlob, `${customer}_${dateTimeText}.zip`);
       formData.append("customer", customer);
+      formData.append("email", customerEmail);
+      formData.append("fileName", file.name);
 
       const res = await fetch("https://north-metal.up.railway.app/submit-order", {
         method: "POST",

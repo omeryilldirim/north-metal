@@ -13,6 +13,15 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+const { Pool } = require("pg");
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false,
+  },
+});
+pool.query("SELECT * FROM orders;").then(res => console.log("DB CONNECTION SUCCESS!")).catch(err => console.error("DB CONNECTION ERROR:", err));
+
 //? Multer setup
 // const storage = multer.diskStorage({
 //   destination: "uploads/",
@@ -44,7 +53,6 @@ const upload = multer({ storage: multer.memoryStorage() });
 //? Fiyat hesaplama fonksiyonu
 function calculatePrice(width, height, partCount = 1, partsList = null) {
   let price = ((((width * height * 1.5 * 8) / 1_000_000) * 35 * 2.5 + 200) * 1.8 * 0.9166);
-  console.log(`${partCount} parça fiyatı hesaplandı`, partsList);
   // =====================================================
   // ✅ %10 zam (35cm kontrolü)
   // =====================================================
@@ -198,17 +206,21 @@ app.post("/calculate-price", (req, res) => {
 app.post("/submit-order", upload.single("zip"), async (req, res) => {
   const zipFile = req.file;
   const customer = req.body.customer;
+  const email = req.body.email;
+  const fileName = req.body.fileName;
 
   if (!zipFile || !customer) {
     return res.status(400).json({ error: "Dosya ve müşteri ismi gerekli!" });
   }
 
+  const orderId = crypto.randomUUID();
+
   try {
     const result = await resend.emails.send({
       from: "North Metal <info@northlasercut.com>",
-      to: process.env.EMAIL_USER,
+      to: process.env.EMAIL_ADMIN,
       subject: `${customer} - Yeni Sipariş`,
-      text: `${customer} yeni sipariş dosyasi ektedir.`,
+      text: `${customer} yeni sipariş dosyasi ektedir. Sipariş No: ${orderId}`,
       attachments: [
         {
           filename: zipFile.originalname,
@@ -218,8 +230,18 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
       ],
     });
     console.log("RESEND RESULT:", result);
-    console.log(`${customer} - Sipariş maili gönderildi.`);
-    res.json({ success: true });
+    console.log(`${customer} - ${fileName} Sipariş maili gönderildi.`);
+
+    pool.query(
+      "INSERT INTO orders (id, customer, email, status, file_name) VALUES ($1,$2,$3,$4,$5)",
+      [orderId, customer, email, "bekliyor", fileName]
+    ).then(() => {
+      console.log("Sipariş DB'ye kaydedildi:", orderId);
+    }).catch(err => {
+      console.error("DB KAYIT HATASI:", err);
+    }).finally(() => {
+      res.json({ success: true });
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Mail gönderme hatası" });
@@ -228,6 +250,139 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
 
 app.get("/", (req,res)=>{
  res.send("API OK");
+});
+
+//? Admin panel endpoint
+app.get("/admin", async (req, res) => {
+
+  if (req.query.token !== process.env.ADMIN_SECRET) {
+    return res.status(403).send("Yetkisiz ❌");
+  }
+
+  const result = await pool.query(
+    "SELECT * FROM orders ORDER BY created_at DESC"
+  );
+
+  const rows = result.rows.map(order => `
+    <tr>
+      <td>${order.id}</td>
+      <td>${new Date(order.created_at).toLocaleString("tr-TR")}</td>
+      <td>${order.customer}</td>
+      <td>${order.file_name || "-"}</td>
+      <td>${order.email}</td>
+      <td>
+        ${
+          order.status === "Kesime Alındı"
+            ? `<button disabled class="btn-green">Kesime Alındı</button>`
+            : `
+              <form method="POST" action="/admin/production/${order.id}?token=${req.query.token}">
+                <button type="submit" class="btn-red">Kesime Al</button>
+              </form>
+            `
+        }
+      </td>
+    </tr>
+  `).join("");
+
+  res.send(`
+    <html>
+      <head>
+        <title>North Metal - Admin Panel</title>
+        <style>
+          h2 {
+            text-align: center;
+            margin-bottom: 30px;
+          }
+          table {
+            margin: 0 auto; /* tabloyu da ortalar */
+            border-collapse: collapse;
+          }
+          td {
+            max-width: 250px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .btn-red {
+            background:#dc3545;
+            color:white;
+            padding:6px 12px;
+            border:none;
+            border-radius:4px;
+            cursor:pointer;
+          }
+
+          .btn-green {
+            background:#28a745;
+            color:white;
+            padding:6px 12px;
+            border:none;
+            border-radius:4px;
+          }
+        </style>
+      </head>
+      <body style="font-family:Arial;padding:40px;">
+        <h2>North Metal - Admin Panel</h2>
+        <table border="1" cellpadding="10" cellspacing="0">
+          <thead>
+            <tr>
+              <th>ID No</th>
+              <th>Tarih</th>
+              <th>Mağaza</th>
+              <th>Dosya Adı</th>
+              <th>Email</th>
+              <th>İşlem</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${rows}
+          </tbody>
+        </table>
+      </body>
+    </html>
+  `);
+});
+
+//? Admin - Kesime Al endpoint
+app.post("/admin/production/:id", async (req, res) => {
+  if (req.query.token !== process.env.ADMIN_SECRET) {
+    return res.status(403).send("Yetkisiz ❌");
+  }
+
+  const { id } = req.params;
+
+  const result = await pool.query(
+    "SELECT * FROM orders WHERE id = $1",
+    [id]
+  );
+
+  if (!result.rows.length) {
+    return res.send("Sipariş bulunamadı ❌");
+  }
+
+  const order = result.rows[0];
+
+  if (order.status === "Kesime Alındı") {
+    return res.redirect(`/admin?token=${req.query.token}`);
+  }
+
+  await pool.query(
+    "UPDATE orders SET status = $1 WHERE id = $2",
+    ["Kesime Alındı", id]
+  );
+
+  // 🔹 Müşteriye mail
+  const response = await resend.emails.send({
+    from: "North Metal <info@northlasercut.com>",
+    // to: order.email,
+    to: "yildirimomer3447@gmail.com", // test maili
+    subject: `${order.customer} - ${order.file_name}`,
+    text: `'${order.file_name}' isimli ve '${order.id} ID nolu siparişiniz kesime alınmıştır.'`,
+  });
+  console.log("RESEND FEEDBACK RESULT:", response);
+  console.log(`${order.customer} - ${order.file_name} Kesime alındı maili gönderildi.`);
+
+  res.redirect(`/admin?token=${req.query.token}`);
 });
 
 const PORT = process.env.PORT || 3001;
