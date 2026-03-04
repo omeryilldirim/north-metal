@@ -220,7 +220,9 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
       from: "North Metal <info@northlasercut.com>",
       to: process.env.EMAIL_ADMIN,
       subject: `${customer} - Yeni Sipariş`,
-      text: `${customer} yeni sipariş dosyasi ektedir. Sipariş No: ${orderId}`,
+      text: `${customer} yeni sipariş dosyasi ektedir.
+        Sipariş No: ${orderId}
+        Admin Panel : https://north-metal.up.railway.app/admin?token=NorthMetal2026`,
       attachments: [
         {
           filename: zipFile.originalname,
