@@ -376,8 +376,7 @@ app.post("/admin/production/:id", async (req, res) => {
   // 🔹 Müşteriye mail
   const response = await resend.emails.send({
     from: "North Metal <info@northlasercut.com>",
-    // to: order.email,
-    to: "yildirimomer3447@gmail.com", // test maili
+    to: order.email,
     subject: `${order.customer} - ${order.file_name}`,
     text: `'${order.file_name}' isimli ve '${order.id} ID nolu siparişiniz kesime alınmıştır.'`,
   });
