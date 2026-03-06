@@ -309,10 +309,10 @@ function App() {
       const CELL_PADDING = 2;
 
       autoTable(doc, {
-        startY: 25,
+        startY: 14,
         head: [["#", "Önizleme", "Renk", "Açıklama", "Müşteri ismi", "En (mm)", "Boy (mm)", "Fiyat (TL)"]],
         columnStyles: {
-          1: {cellWidth: 44, minCellHeight: 35}, // Önizleme sütunu
+          1: {cellWidth: 44, minCellHeight: 37}, // Önizleme sütunu
         },
         styles: {
           font: "NotoSans",
@@ -468,7 +468,7 @@ function App() {
     const CELL_PADDING = 2;
     
     autoTable(doc, {
-      startY: 25,
+      startY: 14,
       head: [
         [
           "#",
@@ -482,7 +482,7 @@ function App() {
         ],
       ],
       columnStyles: {
-        1: { minCellWidth: 44, minCellHeight: 35 }, // Önizleme sütunu
+        1: { minCellWidth: 44, minCellHeight: 37 }, // Önizleme sütunu
       },
       styles: {
         font: "NotoSans",
