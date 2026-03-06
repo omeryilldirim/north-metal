@@ -31,7 +31,7 @@ body {
 }
 
 h1 {
-  font-size: 2.4rem;
+  font-size: 2rem;
   line-height: 1.1;
 }
 
@@ -72,15 +72,9 @@ h1 {
   color: #3f6fa0;
 }
 
-/* Label */
-label {
-  font-size: 14px;
-  color: #555;
-}
-
 /* Select & input */
 select,
-input[type="text"] {
+input {
   padding: 10px 12px;
   border-radius: 8px;
   border: 1px solid #d0d5dd;
@@ -88,7 +82,7 @@ input[type="text"] {
 }
 
 select:focus,
-input[type="text"]:focus {
+input:focus {
   outline: none;
   border-color: #3f6fa0;
   box-shadow: 0 0 0 2px rgba(63, 111, 160, 0.15);
@@ -271,7 +265,7 @@ tbody tr:hover {
   background-color: #e0f0ff; /* açık mavi arka plan */
   border-left: 4px solid #3f6fa0; /* koyu mavi border */
   color: #173153; /* yazı rengi */
-  padding: 12px;
+  padding: 8px;
   border-radius: 8px;
   font-size: 0.8rem; /* küçük yazı */
   line-height: 1.25;
@@ -317,4 +311,10 @@ tbody tr:hover {
   background: #ccc;
   cursor: not-allowed;
   box-shadow: none;
+}
+
+small {
+  display: block;
+  color: #173153;
+  font-size: 12px;
 }

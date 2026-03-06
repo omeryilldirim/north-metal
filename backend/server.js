@@ -233,10 +233,12 @@ app.post("/submit-order", upload.single("zip"), async (req, res) => {
     });
     console.log("RESEND RESULT:", result);
     console.log(`${customer} - ${fileName} Sipariş maili gönderildi.`);
-
+    
+    const cleanEmail = email && email.trim() !== "" ? email.trim() : null;
+    const initialStatus = cleanEmail ? "Bekliyor" : "Kesime Alındı";
     pool.query(
       "INSERT INTO orders (id, customer, email, status, file_name) VALUES ($1,$2,$3,$4,$5)",
-      [orderId, customer, email, "bekliyor", fileName]
+      [orderId, customer, cleanEmail, initialStatus, fileName]
     ).then(() => {
       console.log("Sipariş DB'ye kaydedildi:", orderId);
     }).catch(err => {
@@ -268,7 +270,9 @@ app.get("/admin", async (req, res) => {
   const rows = result.rows.map(order => `
     <tr>
       <td>${order.id}</td>
-      <td>${new Date(order.created_at).toLocaleString("tr-TR")}</td>
+      <td>${new Date(order.created_at).toLocaleString("tr-TR",{
+        timeZone: "Europe/Istanbul"
+      })}</td>
       <td>${order.customer}</td>
       <td>${order.file_name || "-"}</td>
       <td>${order.email}</td>
@@ -373,17 +377,26 @@ app.post("/admin/production/:id", async (req, res) => {
     ["Kesime Alındı", id]
   );
 
-  // 🔹 Müşteriye mail
-  const response = await resend.emails.send({
-    from: "North Metal <info@northlasercut.com>",
-    to: order.email,
-    subject: `${order.customer} - ${order.file_name}`,
-    text: `'${order.file_name}' isimli ve '${order.id} ID nolu siparişiniz kesime alınmıştır.'`,
-  });
-  console.log("RESEND FEEDBACK RESULT:", response);
-  console.log(`${order.customer} - ${order.file_name} Kesime alındı maili gönderildi.`);
-
-  res.redirect(`/admin?token=${req.query.token}`);
+  // 🔹 Email varsa müşteriye mail gönder
+  if (order.email && order.email.trim() !== "") {
+    try {
+      const response = await resend.emails.send({
+        from: "North Metal <info@northlasercut.com>",
+        to: order.email,
+        subject: `${order.customer} - ${order.file_name}`,
+        text: `Siparişiniz kesime alınmıştır.
+              Dosya ismi : '${order.file_name}'
+              ID no : '${order.id}'`,
+      });
+      console.log("RESEND FEEDBACK RESULT:", response);
+      console.log(`${order.customer} - ${order.file_name} Kesime alındı maili gönderildi.`);
+    } catch (mailErr) {
+      console.error("Müşteri mail gönderim hatası:", mailErr);
+    }
+  } else {
+    console.log("Email yok, müşteriye mail gönderilmedi.");
+  }
+  res.redirect(`/admin?token=${req.query.token}`)
 });
 
 const PORT = process.env.PORT || 3001;

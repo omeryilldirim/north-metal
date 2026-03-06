@@ -5,7 +5,6 @@ import JSZip from "jszip";
 // import DejaVuBase64 from "./fonts/DejaVuSans.base64";
 import NotoSansBase64 from "./fonts/NotoSans.base64";
 import { v4 as uuidv4 } from "uuid";
-import customerList from "./customers";
 
 
 function App() {
@@ -13,6 +12,7 @@ function App() {
   const [objects, setObjects] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [customer, setCustomer] = useState("");
+  const [email, setEmail] = useState("");
   const [analyzing, setAnalyzing] = useState(false);
   const [pdfLoading, setPdfLoading] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,6 +55,7 @@ function App() {
   const getFormattedDateTime = () => {
     const now = new Date();
     return now.toLocaleString("tr-TR", {
+      timeZone: "Europe/Istanbul",
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
@@ -105,8 +106,7 @@ function App() {
       if (!pdfBlob) return;
 
       const dateTimeText = getFormattedDateTime();
-      const customerEmail = customerList.find(c => c.name === customer)?.email || "northmetalco@gmail.com";
-
+      
       const zip = new JSZip();
       zip.file(file.name, file); // AI veya SVG
       zip.file(`${customer}_${dateTimeText}.pdf`, pdfBlob); // PDF
@@ -117,7 +117,7 @@ function App() {
       const formData = new FormData();
       formData.append("zip", zipBlob, `${customer}_${dateTimeText}.zip`);
       formData.append("customer", customer);
-      formData.append("email", customerEmail);
+      formData.append("email", email);
       formData.append("fileName", file.name);
 
       const res = await fetch("https://north-metal.up.railway.app/submit-order", {
@@ -303,13 +303,16 @@ function App() {
       doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal", "Identity-H");
       doc.setFont("NotoSans", "normal");
       doc.setFontSize(12);
-      doc.text(`Mağaza ismi: ${customer}`, 14, 15);
+
+      const IMG_MAX_WIDTH = 40;
+      const IMG_MAX_HEIGHT = 30;
+      const CELL_PADDING = 2;
 
       autoTable(doc, {
         startY: 25,
         head: [["#", "Önizleme", "Renk", "Açıklama", "Müşteri ismi", "En (mm)", "Boy (mm)", "Fiyat (TL)"]],
         columnStyles: {
-          1: { minCellWidth:40, minCellHeight: 40}, // Önizleme sütunu
+          1: {cellWidth: 44, minCellHeight: 35}, // Önizleme sütunu
         },
         styles: {
           font: "NotoSans",
@@ -322,15 +325,16 @@ function App() {
         headStyles: {
           font: "NotoSans",
           fontStyle: "normal",
-          minCellHeight: 8,     // 🔹 başlık normal yükseklik
+          minCellHeight: 6,
           halign: "center",
           valign: "middle",
         },
         bodyStyles: {
           font: "NotoSans",
-          minCellHeight: 25,    // ✅ SADECE body satırları 25mm
+          minCellHeight: 30,    // SADECE body satırları
           valign: "middle",
           halign: "center",
+          cellPadding: 2,
         },
         body: objects.map((o, i) => [
           i + 1,
@@ -342,42 +346,70 @@ function App() {
           Math.round(o.height),
           o.price,
         ]),
-        didDrawCell: (data) => {
-          if (data.section === 'body' && data.column.index === 1) {
+        // ! en alttaki resim bazen çok ufak kalıyor
+        // didDrawCell: (data) => {
+        //   if (data.section === 'body' && data.column.index === 1) {
+        //     const obj = objects[data.row.index];
+        //     if (!obj || !obj.previewPng) return; // geçersiz veya boş resmi atla
+        //       const padding = 2;
+        //       const cellWidth = data.cell.width - padding * 2;
+        //       const cellHeight = data.cell.height - padding * 2;
+        //       const ratio = Math.min(
+        //         cellWidth / obj.previewWidth,
+        //         cellHeight / obj.previewHeight,1
+        //       );
+        //       const w = obj.previewWidth * ratio;
+        //       const h = obj.previewHeight * ratio;
+        //       const x = data.cell.x + (cellWidth - w) / 2 + 1;
+        //       const y = data.cell.y + (cellHeight - h) / 2 + 1;
+        //       try {
+        //         doc.addImage(obj.previewPng, 'PNG', x, y, w, h);
+        //       } catch (err) {
+        //         console.warn("Önizleme eklenemedi:", obj.name, err);
+        //         showToast("error", `Önizleme eklenemedi: ${obj.name} ${err}`);
+        //       }
+        //   }
+        // },
+        didParseCell: function (data) {
+          if (data.section === "body" && data.column.index === 1) {
             const obj = objects[data.row.index];
-            if (!obj || !obj.previewPng) return; // geçersiz veya boş resmi atla
+            if (!obj || !obj.previewPng) return;
+            const ratio = Math.min(
+              IMG_MAX_WIDTH / obj.previewWidth,
+              IMG_MAX_HEIGHT / obj.previewHeight,
+              1
+            );
+            const h = obj.previewHeight * ratio;
+            data.row.height = Math.max(data.row.height || 0, h + CELL_PADDING * 2);
+          }
+        },
+        didDrawCell: function (data) {
+          if (data.section === "body" && data.column.index === 1) {
+            const obj = objects[data.row.index];
+            if (!obj || !obj.previewPng) return;
+            const ratio = Math.min(
+              IMG_MAX_WIDTH / obj.previewWidth,
+              IMG_MAX_HEIGHT / obj.previewHeight,
+              1
+            );
+            const w = obj.previewWidth * ratio;
+            const h = obj.previewHeight * ratio;
+            const x = data.cell.x + (data.cell.width - w) / 2;
+            const y = data.cell.y + (data.cell.height - h) / 2;
 
-              const padding = 2;
-              const cellWidth = data.cell.width - padding * 2;
-              const cellHeight = data.cell.height - padding * 2;
-
-              const ratio = Math.min(
-                cellWidth / obj.previewWidth,
-                cellHeight / obj.previewHeight
-              );
-              const w = obj.previewWidth * ratio;
-              const h = obj.previewHeight * ratio;
-
-              const x = data.cell.x + (cellWidth - w) / 2 + 1;
-              const y = data.cell.y + (cellHeight - h) / 2 + 1;
-
-              try {
-                doc.addImage(obj.previewPng, 'PNG', x, y, w, h);
-              } catch (err) {
-                console.warn("Önizleme eklenemedi:", obj.name, err);
-                showToast("error", `Önizleme eklenemedi: ${obj.name} ${err}`);
-              }
-            
+            doc.addImage(obj.previewPng, "PNG", x, y, w, h);
           }
         },
         didDrawPage: (data) => {
           const pageCount = doc.internal.getNumberOfPages();
           doc.setFont("NotoSans", "normal");
-          doc.setFontSize(10);
+          doc.setFontSize(14);
+          doc.text("Mağaza ismi: " + customer, 15, 12, { align: "left",});
+          doc.setFontSize(11);
           doc.text(
             `Sayfa ${data.pageNumber} / ${pageCount}`,
             doc.internal.pageSize.getWidth() - 14,
-            doc.internal.pageSize.getHeight() - 10,
+            doc.internal.pageSize.getHeight() - 4,
             { align: "right" }
           );  
           doc.text(
@@ -392,7 +424,7 @@ function App() {
       doc.text(
         `Toplam : ${totalPrice} TL`,
         doc.internal.pageSize.getWidth() - 14, // sağdan boşluk
-        doc.lastAutoTable.finalY + 10,
+        doc.lastAutoTable.finalY + 6,
         { align: "right" }
       );
 
@@ -430,8 +462,11 @@ function App() {
     doc.addFont("NotoSans-Regular.ttf", "NotoSans", "normal", "Identity-H");
     doc.setFont("NotoSans", "normal");
     doc.setFontSize(12);
-    doc.text(`Magaza ismi: ${customer}`, 14, 15);
-
+    
+    const IMG_MAX_WIDTH = 40;
+    const IMG_MAX_HEIGHT = 30;
+    const CELL_PADDING = 2;
+    
     autoTable(doc, {
       startY: 25,
       head: [
@@ -447,7 +482,7 @@ function App() {
         ],
       ],
       columnStyles: {
-        1: { minCellWidth: 40, minCellHeight: 40 }, // Önizleme sütunu
+        1: { minCellWidth: 44, minCellHeight: 35 }, // Önizleme sütunu
       },
       styles: {
         font: "NotoSans",
@@ -460,15 +495,16 @@ function App() {
       headStyles: {
         font: "NotoSans",
         fontStyle: "normal",
-        minCellHeight: 8, // 🔹 başlık normal yükseklik
+        minCellHeight: 6,
         halign: "center",
         valign: "middle",
       },
       bodyStyles: {
         font: "NotoSans",
-        minCellHeight: 25, // ✅ SADECE body satırları 25mm
+        minCellHeight: 30, // SADECE body satırları
         valign: "middle",
         halign: "center",
+        cellPadding: 2,
       },
       body: objects.map((o, i) => [
         i + 1,
@@ -480,42 +516,47 @@ function App() {
         o.height,
         o.price,
       ]),
-      didDrawCell: (data) => {
+      didParseCell: function (data) {
         if (data.section === "body" && data.column.index === 1) {
           const obj = objects[data.row.index];
-          if (!obj || !obj.previewPng) return; // geçersiz veya boş resmi atla
-
-          const padding = 2;
-          const cellWidth = data.cell.width - padding * 2;
-          const cellHeight = data.cell.height - padding * 2;
-
+          if (!obj || !obj.previewPng) return;
           const ratio = Math.min(
-            cellWidth / obj.previewWidth,
-            cellHeight / obj.previewHeight
+            IMG_MAX_WIDTH / obj.previewWidth,
+            IMG_MAX_HEIGHT / obj.previewHeight,
+            1,
+          );
+          const h = obj.previewHeight * ratio;
+          data.row.height = Math.max( data.row.height || 0, h + CELL_PADDING * 2, );
+        }
+      },
+      didDrawCell: function (data) {
+        if (data.section === "body" && data.column.index === 1) {
+          const obj = objects[data.row.index];
+          if (!obj || !obj.previewPng) return;
+          const ratio = Math.min(
+            IMG_MAX_WIDTH / obj.previewWidth,
+            IMG_MAX_HEIGHT / obj.previewHeight,
+            1,
           );
           const w = obj.previewWidth * ratio;
           const h = obj.previewHeight * ratio;
+          const x = data.cell.x + (data.cell.width - w) / 2;
+          const y = data.cell.y + (data.cell.height - h) / 2;
 
-          const x = data.cell.x + (cellWidth - w) / 2 + 1;
-          const y = data.cell.y + (cellHeight - h) / 2 + 1;
-
-          try {
-            doc.addImage(obj.previewPng, "PNG", x, y, w, h);
-          } catch (err) {
-            console.warn("Önizleme eklenemedi:", obj.name, err);
-            showToast("error", `Önizleme eklenemedi: ${obj.name} ${err}`);
-          }
+          doc.addImage(obj.previewPng, "PNG", x, y, w, h);
         }
       },
       didDrawPage: (data) => {
         const pageCount = doc.internal.getNumberOfPages();
         doc.setFont("NotoSans", "normal");
-        doc.setFontSize(10);
+        doc.setFontSize(14);
+        doc.text("Mağaza ismi: " + customer, 15, 12, { align: "left",});
+        doc.setFontSize(11);
         doc.text(
           `Sayfa ${data.pageNumber} / ${pageCount}`,
           doc.internal.pageSize.getWidth() - 14,
-          doc.internal.pageSize.getHeight() - 10,
-          { align: "right" }
+          doc.internal.pageSize.getHeight() - 4,
+          { align: "right" },
         );
         doc.text(dateTimeText, doc.internal.pageSize.getWidth() - 14, 12, {
           align: "right",
@@ -525,7 +566,7 @@ function App() {
       doc.text(
         `Toplam : ${totalPrice} TL`,
         doc.internal.pageSize.getWidth() - 14, // sağdan boşluk
-        doc.lastAutoTable.finalY + 10,
+        doc.lastAutoTable.finalY + 6,
         { align: "right" }
       );
 
@@ -614,8 +655,7 @@ function App() {
 
   return (
     <div className="app-container">
-      <h1 className="page-title">North Metal – Fiyat Hesaplama Aracı</h1>
-      <br />
+      <h1 className="page-title">North Metal Lazer Kesim</h1>
 
       {/* MÜŞTERİ ADI */}
       <div className="customer-row">
@@ -624,12 +664,24 @@ function App() {
         </label>
         <input
           type="text"
-          placeholder="Mağaza ismi giriniz"
+          placeholder="Mağaza isminizi giriniz..."
           value={customer}
           onChange={(e) => setCustomer(e.target.value)}
           required
-          style={{ borderColor: !customer ? "red" : "initial", marginTop: 4 }}
+          style={{ borderColor: !customer ? "red" : "initial", marginBottom: "10px" }}
         />
+        <label>
+          <strong>Email</strong>
+        </label>
+        <input
+          type="email"
+          placeholder="Email adresinizi giriniz...(Opsiyonel)"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+        <small>
+          Siparişiniz kesime alındığında bilgilendirme maili almak istiyorsanız email adresinizi yazınız.
+        </small>
       </div>
 
       <br />
@@ -637,7 +689,7 @@ function App() {
       <div className="info-box">
         <h3>Önemli Bilgilendirme</h3>
         <ol>
-          <li>Lütfen önce mağaza ismini yazınız.</li>
+          <li>Mağaza ismi zorunlu, email zorunlu değildir. Email yazdığınız takdirde siparişiniz kesime alındığında bilgilendirme maili gelecektir.</li>
           <li>
             Her seferinde <strong>tek dosya</strong> yükleyiniz ve <strong>SVG formatında</strong> yükleyiniz. 
             AI formatından SVG'ye çeviriyorsanız, çevirme işlemi sırasında <strong>responsive özelliğini kapalı</strong> bırakınız. Çalışma dosyanıza bilgilendirme amaçlı text objeleri yazmayınız.
@@ -680,7 +732,6 @@ function App() {
         onChange={handleFileSelect}
         style={{ display: "none" }}
       />
-      <br />
       <br />
 
       {/* ANALYZE BUTONU */}
