@@ -89,6 +89,11 @@ function App() {
   const submitFile = async () => {
     if (isSubmitting) return; // ekstra güvenlik
 
+    if (!isValidEmail(email)) {
+      showToast("error", "Geçerli bir email adresi giriniz.");
+      return;
+    }
+
     if (!allFieldsFilled) {
       showToast("error", "Lütfen tüm objeler için renk ve isim giriniz.");
       return;
@@ -653,6 +658,11 @@ function App() {
     return text ? text.normalize("NFC") : "";
   }
 
+  const isValidEmail = (email) => {
+    if (!email) return true; // boşsa sorun yok (opsiyonel alan)
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  };
+
   return (
     <div className="app-container">
       <h1 className="page-title">North Metal Lazer Kesim</h1>
@@ -678,6 +688,7 @@ function App() {
           placeholder="Email adresinizi giriniz...(Opsiyonel)"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          style={{ borderColor: email && !isValidEmail(email) ? "red" : "initial" }}
         />
         <small>
           Siparişiniz kesime alındığında bilgilendirme maili almak istiyorsanız email adresinizi yazınız.

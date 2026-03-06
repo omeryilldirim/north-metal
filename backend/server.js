@@ -20,7 +20,24 @@ const pool = new Pool({
     rejectUnauthorized: false,
   },
 });
-pool.query("SELECT * FROM orders;").then(res => console.log("DB CONNECTION SUCCESS!")).catch(err => console.error("DB CONNECTION ERROR:", err));
+async function initDB() {
+  try {
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS orders (
+        id UUID PRIMARY KEY,
+        customer TEXT,
+        email TEXT,
+        status TEXT,
+        file_name TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    console.log("DB READY ✅");
+  } catch (err) {
+    console.error("DB INIT ERROR ❌", err);
+  }
+}
+initDB();
 
 //? Multer setup
 // const storage = multer.diskStorage({
