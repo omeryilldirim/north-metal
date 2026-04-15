@@ -19,6 +19,11 @@ function App() {
   const [toast, setToast] = useState(null); 
   const fileInputRef = useRef();
   const [selectedIds, setSelectedIds] = useState([]);
+  const [calcWidth, setCalcWidth] = useState("");
+  const [calcHeight, setCalcHeight] = useState("");
+  const [calcResult, setCalcResult] = useState(null);
+  const [calcLoading, setCalcLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("order"); 
   const COLORS = [
     { name: "Siyah", hex: "#000000" },
     { name: "Eskitme", hex: "#bfa24a" },
@@ -38,6 +43,50 @@ function App() {
     { name: "Çatlak Siyah", hex: "#1c1c1c" },
     { name: "Çatlak Krem", hex: "#e6dcc8" },
   ];
+  
+  const handleSimpleCalculate = async () => {
+    if (!Number(calcWidth) || !Number(calcHeight)) {
+      showToast("error", "Geçerli değer giriniz");
+      return;
+    }
+    try {
+      setCalcLoading(true);
+      let price = ((((Number(calcWidth) * Number(calcHeight) * 1.5 * 8) / 1_000_000) * 35 * 2.5 + 200) * 1.8 * 0.9166);
+      // =====================================================
+      // ✅ %10 zam (35cm kontrolü)
+      // =====================================================
+      if (Number(calcWidth) > 359 || Number(calcHeight) > 359) {
+        price *= 1.10;
+      }
+      // =====================================================
+      // ✅ UZUN KENAR KONTROLÜ (YENİ SİSTEM)
+      // =====================================================
+      const longestSide = Math.max(Number(calcWidth), Number(calcHeight));
+      if (longestSide > 690 && longestSide < 995) {
+        price += 100;
+      } else if (longestSide >= 995 && longestSide < 1195) {
+        price += 200;
+      } else if (longestSide >= 1195 && longestSide < 1395) {
+        price += 300;
+      } else if (longestSide >= 1395 && longestSide < 1495) {
+        price += 400;
+      } else if (longestSide >= 1495) {
+        price += 500;
+      }
+      setCalcResult(Math.ceil(price));
+    } catch (err) {
+      console.error(err);
+      showToast("error", "Hesaplama başarısız");
+    } finally {
+      setCalcLoading(false);
+    }
+  };
+
+  const handleResetButton = () => {
+    setCalcWidth("");
+    setCalcHeight("");
+    setCalcResult(null);
+  };
 
   const toggleSelect = (id) => {
     setSelectedIds(prev =>
@@ -667,6 +716,98 @@ function App() {
     <div className="app-container">
       <h1 className="page-title">North Metal Lazer Kesim</h1>
 
+      <div style={{
+        display: "flex",
+        width: "100%",
+        marginBottom: "20px"
+      }}>
+        <button
+          onClick={() => setActiveTab("order")}
+          style={{
+            flex: 1,
+            padding: "12px",
+            border: "1px solid #ddd",
+            borderRadius: "8px 0 0 8px",
+            cursor: "pointer",
+            background: activeTab === "order" ? "linear-gradient(135deg, #3f6fa0, #3f83a0d3)" : "#f5f5f5",
+            color: activeTab === "order" ? "#fff" : "#3f6fa0",
+            boxShadow: activeTab === "order" ? "0 6px 12px rgba(0,0,0,0.2)": "none",
+            borderRight: "none"
+          }}
+        >
+          Sipariş Oluştur
+        </button>
+        <button
+          onClick={() => setActiveTab("quick")}
+          style={{
+            flex: 1,
+            padding: "12px",
+            border: "1px solid #ddd",
+            borderRadius: "0 8px 8px 0",
+            cursor: "pointer",
+            background: activeTab === "quick" ? "linear-gradient(135deg, #3f6fa0, #3f83a0d3)" : "#f5f5f5",
+            color: activeTab === "quick" ? "#fff" : "#3f6fa0",
+            boxShadow: activeTab === "quick" ? "0 6px 12px rgba(0,0,0,0.2)": "none",
+          }}
+        >
+          Hızlı Fiyat Hesaplama
+        </button>
+      </div>
+
+      {activeTab === "quick" && (
+        <div className="calc-box">
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:"5px" }}>
+            <label>
+              <strong>Genişlik (mm)</strong>
+            </label>
+            <input
+              type="number"
+              min="1"
+              placeholder="Genişlik (mm)"
+              value={calcWidth}
+              onChange={(e) => setCalcWidth(e.target.value)}
+              required
+              style={{ borderColor: !calcWidth ? "red" : "initial", marginBottom: "10px" }}
+            />
+            <label>
+              <strong>Yükseklik (mm)</strong>
+            </label>
+            <input
+              type="number"
+              min="1"
+              placeholder="Yükseklik (mm)"
+              value={calcHeight}
+              onChange={(e) => setCalcHeight(e.target.value)}
+              required
+              style={{ borderColor: !calcHeight ? "red" : "initial", marginBottom: "10px" }}
+            />
+            <div style={{display: `flex`, gap:`10px`}}>
+              <button className="primary-button" onClick={handleSimpleCalculate} disabled={calcLoading}>
+                {calcLoading ? "Hesaplanıyor..." : "Hesapla"}
+              </button>
+              <button className="primary-button" onClick={handleResetButton} disabled={!calcWidth && !calcHeight} >
+                Sıfırla
+              </button>
+            </div>
+
+            {calcResult === null ? (
+              <div style={{ marginTop: "10px", opacity: 0.9 }}>
+                Fiyat hesaplamak için değer giriniz
+              </div>
+            ) : (
+              <div style={{ marginTop: "10px", fontWeight: "bold" }}>
+                Sonuç: {calcResult} TL
+              </div>
+            )}
+            <small>
+              Çoklu parçalı fiyatlandırma için ‘Sipariş Oluştur’ sekmesinden dosya yükleyin.            
+            </small>
+          </div>
+        </div>
+      )}
+
+      {activeTab === "order" && (
+      <>
       {/* MÜŞTERİ ADI */}
       <div className="customer-row">
         <label>
@@ -678,7 +819,7 @@ function App() {
           value={customer}
           onChange={(e) => setCustomer(e.target.value)}
           required
-          style={{ borderColor: !customer ? "red" : "initial", marginBottom: "10px" }}
+          style={{ borderColor: !customer ? "red" : "initial", marginBottom: "15px" }}
         />
         <label>
           <strong>Email</strong>
@@ -885,6 +1026,8 @@ function App() {
         >
           {`Seçilenleri Birleştir (${selectedIds.length})`}
         </button>
+      )}
+        </>
       )}
     </div>
   );

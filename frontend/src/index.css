@@ -259,6 +259,7 @@ tbody tr:hover {
 .customer-row label {
   font-size: 16px;
   color: #3f6fa0;
+  margin-bottom: 6px;
 }
 
 .info-box {
@@ -318,3 +319,13 @@ small {
   color: #173153;
   font-size: 12px;
 }
+
+.calc-box {
+  background-color: #e0f0ff; /* açık mavi arka plan */
+  border-left: 4px solid #3f6fa0; /* koyu mavi border */
+  color: #3f6fa0; /* yazı rengi */
+  padding: 20px 10px;
+  border-radius: 8px;
+  line-height: 1.25;
+  margin-bottom: 10px;
+} 
