@@ -31,6 +31,7 @@ function App() {
     { name: "Kırmızı", hex: "#ff0000" },
     { name: "Simli Mavi", hex: "#3f6fa0" },
     { name: "Simli Kahve", hex: "#6b4f3f" },
+    { name: "Koyu Kahve", hex: "#503b2e" },
     { name: "Krem", hex: "#f5f0dc" },
     { name: "Turuncu", hex: "#ff7a00" },
     { name: "Bakır", hex: "#a44413" },
@@ -459,7 +460,7 @@ function App() {
           doc.setFont("NotoSans", "normal");
           doc.setFontSize(14);
           doc.text("Mağaza ismi: " + customer, 15, 12, { align: "left",});
-          doc.setFontSize(11);
+          doc.setFontSize(12);
           doc.text(
             `Sayfa ${data.pageNumber} / ${pageCount}`,
             doc.internal.pageSize.getWidth() - 14,
@@ -468,10 +469,10 @@ function App() {
           );  
           doc.text(
             dateTimeText,
-            doc.internal.pageSize.getWidth() - 14,
-            12,
-            { align: "right" }
-          );      
+            doc.internal.pageSize.getWidth() / 2 + 10,
+            12, // Yüksekliği (Y ekseni) 
+            { align: "center" }
+          );     
         },
       });
 
@@ -605,16 +606,19 @@ function App() {
         doc.setFont("NotoSans", "normal");
         doc.setFontSize(14);
         doc.text("Mağaza ismi: " + customer, 15, 12, { align: "left",});
-        doc.setFontSize(11);
+        doc.setFontSize(12);
         doc.text(
           `Sayfa ${data.pageNumber} / ${pageCount}`,
           doc.internal.pageSize.getWidth() - 14,
           doc.internal.pageSize.getHeight() - 4,
           { align: "right" },
         );
-        doc.text(dateTimeText, doc.internal.pageSize.getWidth() - 14, 12, {
-          align: "right",
-        });
+        doc.text(
+          dateTimeText,
+          doc.internal.pageSize.getWidth() / 2 + 10,
+          12, // Yüksekliği (Y ekseni) 
+          { align: "center" }
+        );    
       },
     });
       doc.text(
