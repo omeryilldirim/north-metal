@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from "uuid";
 function App() {
   const [file, setFile] = useState(null)
   const [objects, setObjects] = useState([]);
+  const [barcodeFile, setBarcodeFile] = useState(null);
   const [totalPrice, setTotalPrice] = useState(0);
   const [customer, setCustomer] = useState("");
   const [email, setEmail] = useState("");
@@ -52,6 +53,21 @@ function App() {
     { name: "Kırmızı", hex: "#ff0000" },
   ];
   
+  const handleBarcodeFileSelect = (e) => {
+    const selectedFile = e.target.files[0];
+
+    if (!selectedFile) return;
+
+    if (selectedFile.type !== "application/pdf") {
+      showToast("error", "Barkod dosyası sadece PDF olmalıdır.");
+      e.target.value = "";
+      setBarcodeFile(null);
+      return;
+    }
+
+    setBarcodeFile(selectedFile);
+  };
+
   const handleSimpleCalculate = async () => {
     if (!Number(calcWidth) || !Number(calcHeight)) {
       showToast("error", "Geçerli değer giriniz");
@@ -161,6 +177,11 @@ function App() {
       return;
     }
 
+    if (!barcodeFile) {
+      showToast("error", "Üretime göndermek için barkod PDF dosyasını yükleyiniz.");
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -172,6 +193,7 @@ function App() {
       const zip = new JSZip();
       zip.file(file.name, file); // AI veya SVG
       zip.file(`${customer}_${dateTimeText}.pdf`, pdfBlob); // PDF
+      zip.file(barcodeFile.name, barcodeFile);
 
       const zipBlob = await zip.generateAsync({ type: "blob" });
 
@@ -211,6 +233,7 @@ function App() {
     e.stopPropagation();
     if (e.dataTransfer.files && e.dataTransfer.files[0]) {
       setFile(e.dataTransfer.files[0]);
+      setBarcodeFile(null);
       setObjects([]);
       setTotalPrice(0);
     }
@@ -223,6 +246,7 @@ function App() {
 
   const handleFileSelect = (e) => {
     setFile(e.target.files[0]);
+    setBarcodeFile(null);
     setObjects([]);
     setTotalPrice(0);
   };
@@ -904,6 +928,38 @@ function App() {
       </button>
 
       {objects.length > 0 && (
+        <div className="barcode-upload-box">
+          <h3 style={{ marginBottom: 0, marginTop: "15px" }}>
+            Barkod Dosyası <span style={{ color: "red" }}>*</span>
+          </h3>
+
+          <p style={{ marginTop: 0, fontSize: "13px" }}>
+            Siparişinizi üretime göndermek için PDF formatında barkod dosyası yüklemeniz gerekmektedir.
+          </p>
+
+          <input
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handleBarcodeFileSelect}
+            style={{ marginBottom: barcodeFile ? "5px" : "20px" }}
+          />
+
+          {barcodeFile && (
+            <div
+              style={{
+                marginBottom: "10px",
+                fontSize: "13px",
+                color: "#3f6fa0",
+                fontWeight: "bold",
+              }}
+            >
+              ✓ Seçilen dosya: {barcodeFile.name}
+            </div>
+          )}
+        </div>
+      )}
+
+      {objects.length > 0 && (
         <>
           <h2>Objeler</h2>
 
@@ -1021,7 +1077,7 @@ function App() {
           >
             {pdfLoading ? "PDF hazırlanıyor..." : "Kaydet ve PDF İndir"}
           </button>
-          <button className="primary-button" onClick={submitFile} disabled={isSubmitting || !file || !customer}>
+          <button className="primary-button" onClick={submitFile} disabled={isSubmitting || !file || !customer ||!barcodeFile}>
             {isSubmitting ? <span className="spinner" /> : "Üretime Gönder"}
           </button>
           {toast && (

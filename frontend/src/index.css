@@ -67,8 +67,13 @@ h1 {
 }
 
 .app-container h2 {
-  margin-top: 32px;
+  margin-top: 16px;
   margin-bottom: 12px;
+  color: #3f6fa0;
+}
+
+.app-container h3 {
+
   color: #3f6fa0;
 }
 
@@ -91,7 +96,7 @@ input:focus {
 /* Drag & Drop alanı */
 .drop-area {
   border: 2px dashed #b6c2d9;
-  padding: 40px;
+  padding: 25px;
   text-align: center;
   border-radius: 12px;
   background: #f9fbff;
@@ -118,7 +123,8 @@ input:focus {
   cursor: pointer;
   transition: all 0.2s ease;
   display: block;
-  margin: 4px auto;
+  margin: auto;
+  margin-top: 0px;
 }
 
 .primary-button:hover:not(:disabled) {
@@ -329,3 +335,11 @@ small {
   line-height: 1.25;
   margin-bottom: 10px;
 } 
+
+.barcode-upload-box {
+  margin-top: 25px;
+  padding: 0px 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9fbff;
+}
